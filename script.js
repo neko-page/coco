@@ -115,7 +115,7 @@ async function loadFromLocal() {
     console.log('📁 尝试从本地加载');
     
     try {
-        const module = await import('resources.js');
+        const module = await import('https://neko-page.github.io/src/coco/main/resources.js');
         resources = module.resources || {};
     } catch (error) {
         console.warn('⚠️ 本地导入失败，尝试备用方案');
