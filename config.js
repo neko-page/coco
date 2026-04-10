@@ -2,10 +2,10 @@
 // 格式：{ "名称": "头像URL" }
 // 开发者可在此文件中修改配置
 const customAvatars = {
-    "垃圾桶": "https://static.codemao.cn/pickduck/HyIQDQmdle.png?hash=FpoaZzw8idNDN2k8koxti2PWQHl_",
-    "梦中水": "https://shequ.codemao.cn/user/15980757",
-    "风哲": "https://static.codemao.cn/pickduck/Hk5dtZA2ee.png?hash=FrHNdFMuCcYJxY8ZzoHV-Csrfch8",
-    "小猫": "https://static.codemao.cn/pickduck/HyIQDQmdle.png?hash=FpoaZzw8idNDN2k8koxti2PWQHl_"
+    "垃圾桶": "https://q1.qlogo.cn/g?b=qq&nk=575244421&s=640",
+    "梦中水": "https://static.codemao.cn/pickduck/HkM3AfCrll.jpg?hash=Flpf_3gPYeybDTRe5AD5zZDl5FmY",
+    "风哲": "https://static.codemao.cn/pickduck/Hyw0KWRhlx.jpg?hash=FiUjyERA6aApTCDEb6TYzCvOL4wR",
+    "小猫": "https://static.codemao.cn/pickduck/SJ3pQMXueg.jpg?hash=FoVrX6JKsBAGl1TFVemZ7IBujIAL"
 };
 
 // 默认 Logo URL
