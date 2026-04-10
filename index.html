@@ -11,8 +11,10 @@
     <div class="container">
         <!-- 侧边栏 -->
         <aside class="sidebar">
-            <!-- 移除了默认的 active 类，交由 JS 控制 -->
-            <div class="sidebar-item" data-category="all" title="全部功能"><i class="fas fa-home"></i></div>
+            <!-- 新增收藏入口 -->
+            <div class="sidebar-item" data-category="favorites" title="我的收藏"><i class="fas fa-heart"></i></div>
+            <div class="sidebar-item active" data-category="all" title="全部功能"><i class="fas fa-home"></i></div>
+            
             <div class="sidebar-item" data-category="tool" title="通用工具"><i class="fas fa-toolbox"></i></div>
             <div class="sidebar-item" data-category="api" title="API接口"><i class="fas fa-plug"></i></div>
             <div class="sidebar-item" data-category="component" title="控件库"><i class="fas fa-puzzle-piece"></i></div>
@@ -29,7 +31,6 @@
 
         <!-- 主内容区 -->
         <main class="main-content">
-            <!-- 顶部栏 -->
             <header class="header">
                 <div class="logo-section">
                     <img src="https://static.codemao.cn/pickduck/rk_gX8cSlx.png?hash=FledMqVJIqXs3At0Xl317dAny1jZ" alt="Logo" class="logo" id="siteLogo">
@@ -44,9 +45,8 @@
                 </div>
             </header>
 
-            <!-- 分类内容区 -->
             <div id="contentArea">
-                <!-- 卡片将由 JS 动态生成 -->
+                <!-- 动态生成 -->
             </div>
         </main>
     </div>
@@ -61,10 +61,7 @@
             
             <div class="setting-item">
                 <div class="setting-header">
-                    <div class="setting-label">
-                        <i class="fas fa-image"></i>
-                        <span>Logo URL</span>
-                    </div>
+                    <div class="setting-label"><i class="fas fa-image"></i> <span>Logo URL</span></div>
                 </div>
                 <div class="setting-desc">设置左上角显示的 Logo 图片地址（需以 https:// 开头）</div>
                 <div class="input-group">
@@ -74,33 +71,19 @@
 
             <div class="setting-item">
                 <div class="setting-header">
-                    <div class="setting-label">
-                        <i class="fas fa-cloud-download-alt"></i>
-                        <span>数据加载方式</span>
-                    </div>
+                    <div class="setting-label"><i class="fas fa-cloud-download-alt"></i> <span>数据加载方式</span></div>
                 </div>
                 <div class="setting-desc">选择资源列表的加载来源</div>
                 <div class="radio-group">
-                    <label class="radio-option">
-                        <input type="radio" name="loadMode" value="cdn" checked>
-                        <span>CDN 模式</span>
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="loadMode" value="page">
-                        <span>本地模式</span>
-                    </label>
+                    <label class="radio-option"><input type="radio" name="loadMode" value="cdn" checked><span>CDN 模式</span></label>
+                    <label class="radio-option"><input type="radio" name="loadMode" value="page"><span>本地模式</span></label>
                 </div>
             </div>
 
             <div class="setting-item">
                 <div class="setting-header">
-                    <div class="setting-label">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>二次确认跳转</span>
-                    </div>
-                    <div class="switch" id="confirmToggle">
-                        <div class="switch-handle"></div>
-                    </div>
+                    <div class="setting-label"><i class="fas fa-shield-alt"></i> <span>二次确认跳转</span></div>
+                    <div class="switch" id="confirmToggle"><div class="switch-handle"></div></div>
                 </div>
                 <div class="setting-desc">点击卡片时弹出确认对话框，防止误触</div>
             </div>
@@ -126,7 +109,6 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
     <script src="script.js" type="module"></script>
 </body>
 </html>

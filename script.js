@@ -4,7 +4,11 @@ let currentCategory = 'all';
 let confirmJump = false;
 let currentCardData = null;
 
-// 默认配置（避免 config.js 加载失败导致崩溃）
+// 收藏夹列表 (从 localStorage 读取)
+const FAVORITES_KEY = 'coco_nav_favorites';
+let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+
+// 默认配置（内置 fallback）
 const DEFAULT_CONFIG = {
     DEFAULT_LOGO_URL: 'https://static.codemao.cn/pickduck/rk_gX8cSlx.png?hash=FledMqVJIqXs3At0Xl317dAny1jZ',
     customAvatars: {
@@ -15,9 +19,9 @@ const DEFAULT_CONFIG = {
     }
 };
 
-// 获取配置（优先使用外部，失败则使用默认）
-const DEFAULT_LOGO_URL = (typeof window !== 'undefined' && window.DEFAULT_LOGO_URL) || DEFAULT_CONFIG.DEFAULT_LOGO_URL;
-const customAvatars = (typeof window !== 'undefined' && window.customAvatars) || DEFAULT_CONFIG.customAvatars;
+// 获取配置
+const DEFAULT_LOGO_URL = window.DEFAULT_LOGO_URL || DEFAULT_CONFIG.DEFAULT_LOGO_URL;
+const customAvatars = window.customAvatars || DEFAULT_CONFIG.customAvatars;
 
 function getCustomAvatar(name) {
     return customAvatars[name] || null;
@@ -31,19 +35,14 @@ let siteLogo, themeToggle;
 // ==================== 初始化入口 ====================
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // 1. 缓存 DOM 元素
         cacheDOMElements();
-        
-        // 2. 加载设置
         loadSettings();
-        
-        // 3. 绑定事件
         setupEventListeners();
         
-        // 4. 默认选中"全部"
+        // 默认激活"全部"
         setActiveCategory('all');
         
-        // 5. 加载数据并渲染
+        // 加载数据并渲染
         await loadData();
         renderContent();
         
@@ -71,7 +70,6 @@ function cacheDOMElements() {
 // ==================== 数据加载 ====================
 async function loadData() {
     const loadMode = localStorage.getItem('loadMode') || 'cdn';
-    
     try {
         if (loadMode === 'cdn') {
             await loadFromCDN();
@@ -87,39 +85,23 @@ async function loadData() {
 }
 
 async function loadFromCDN() {
-    const cdnUrl = 'https://cdn.jsdelivr.net/gh/neko-page/src@main/coco/main/resources.js';
-    console.log('📡 尝试从 CDN 加载:', cdnUrl);
-    
+    // 修正后的路径：neko-page/src 仓库，coco 分支
+    const cdnUrl = 'https://cdn.jsdelivr.net/gh/neko-page/src@coco/main/resources.js';
     const response = await fetch(cdnUrl);
-    if (!response.ok) {
-        throw new Error(`CDN 请求失败: HTTP ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
     const text = await response.text();
-    
-    // 解析 export const resources = {...}
     const match = text.match(/export const resources = ({[\s\S]*?});\s*$/m);
-    if (!match || !match[1]) {
-        throw new Error('无法解析资源数据格式');
-    }
+    if (!match || !match[1]) throw new Error('无法解析资源数据');
     
-    // 安全解析对象
     resources = new Function('return ' + match[1])();
-    
-    if (!resources || typeof resources !== 'object') {
-        throw new Error('解析后的数据不是有效对象');
-    }
 }
 
 async function loadFromLocal() {
-    console.log('📁 尝试从本地加载');
-    
     try {
-        const module = await import('https://neko-page.github.io/src/coco/main/resources.js');
+        const module = await import('./数据存储.js');
         resources = module.resources || {};
     } catch (error) {
-        console.warn('⚠️ 本地导入失败，尝试备用方案');
-        // 如果 import 失败（如 CORS 问题），尝试通过全局变量获取
         if (window.resources) {
             resources = window.resources;
         } else {
@@ -130,7 +112,6 @@ async function loadFromLocal() {
 
 // ==================== 设置管理 ====================
 function loadSettings() {
-    // Logo
     const savedLogo = localStorage.getItem('siteLogo');
     if (savedLogo && siteLogo) {
         siteLogo.src = savedLogo;
@@ -139,14 +120,12 @@ function loadSettings() {
         logoUrlInput.value = DEFAULT_LOGO_URL;
     }
     
-    // 二次确认
     const savedConfirm = localStorage.getItem('confirmJump');
     if (savedConfirm === 'true' && confirmToggle) {
         confirmJump = true;
         confirmToggle.classList.add('active');
     }
     
-    // 加载方式
     const savedLoadMode = localStorage.getItem('loadMode') || 'cdn';
     if (loadModeRadios) {
         for (const radio of loadModeRadios) {
@@ -154,7 +133,6 @@ function loadSettings() {
         }
     }
     
-    // 主题
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
@@ -163,24 +141,17 @@ function loadSettings() {
 }
 
 function saveSettings() {
-    // Logo URL 校验
     let logoUrl = logoUrlInput ? logoUrlInput.value.trim() : '';
     if (logoUrl) {
         if (!logoUrl.startsWith('https://')) {
-            alert('⚠️ 请使用 HTTPS 开头的图片链接以确保安全性！');
+            alert('⚠️ 请使用 HTTPS 开头的图片链接！');
             return;
         }
         localStorage.setItem('siteLogo', logoUrl);
         if (siteLogo) siteLogo.src = logoUrl;
-    } else {
-        localStorage.setItem('siteLogo', DEFAULT_LOGO_URL);
-        if (siteLogo) siteLogo.src = DEFAULT_LOGO_URL;
     }
     
-    // 二次确认
     localStorage.setItem('confirmJump', confirmJump);
-    
-    // 加载方式
     if (loadModeRadios) {
         for (const radio of loadModeRadios) {
             if (radio.checked) {
@@ -198,7 +169,7 @@ function saveSettings() {
 function setupEventListeners() {
     if (!contentArea) return;
     
-    // 侧边栏分类切换
+    // 侧边栏点击
     document.querySelectorAll('.sidebar-item[data-category]').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -220,21 +191,12 @@ function setupEventListeners() {
         });
     }
     
-    // 保存设置
-    if (saveSettingsBtn) {
-        saveSettingsBtn.addEventListener('click', saveSettings);
-    }
+    if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
     
-    // 点击遮罩关闭弹窗
     [settingsModal, confirmModal].forEach(modal => {
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.remove('active');
-            });
-        }
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
     });
     
-    // 二次确认开关
     if (confirmToggle) {
         confirmToggle.addEventListener('click', () => {
             confirmJump = !confirmJump;
@@ -242,33 +204,16 @@ function setupEventListeners() {
         });
     }
     
-    // 确认弹窗按钮
-    const cancelBtn = document.getElementById('confirmCancel');
-    const proceedBtn = document.getElementById('confirmProceed');
+    document.getElementById('confirmCancel')?.addEventListener('click', () => confirmModal?.classList.remove('active'));
+    document.getElementById('confirmProceed')?.addEventListener('click', () => {
+        if (currentCardData) {
+            window.open(currentCardData.link, '_blank');
+            confirmModal?.classList.remove('active');
+        }
+    });
     
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-            if (confirmModal) confirmModal.classList.remove('active');
-        });
-    }
+    if (searchInput) searchInput.addEventListener('input', debounce(() => renderContent(), 300));
     
-    if (proceedBtn) {
-        proceedBtn.addEventListener('click', () => {
-            if (currentCardData) {
-                window.open(currentCardData.link, '_blank');
-                if (confirmModal) confirmModal.classList.remove('active');
-            }
-        });
-    }
-    
-    // 搜索（防抖）
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(() => {
-            renderContent();
-        }, 300));
-    }
-    
-    // 主题切换
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -288,44 +233,59 @@ function setupEventListeners() {
 // ==================== 内容渲染 ====================
 function renderContent() {
     if (!contentArea) return;
-    
     contentArea.innerHTML = '';
     const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
     
-    // 空数据提示
     if (!resources || Object.keys(resources).length === 0) {
-        contentArea.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-exclamation-circle" style="font-size:48px;margin-bottom:20px"></i>
-                <h3>无法加载资源列表</h3>
-                <p>请检查网络连接，或在设置中切换为"本地模式"</p>
-                <button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;border:none;border-radius:8px;background:var(--primary-color);color:white;cursor:pointer">
-                    刷新重试
-                </button>
-            </div>
-        `;
+        contentArea.innerHTML = `<div class="empty-state"><i class="fas fa-database"></i><h3>无法加载资源列表</h3><p>请检查网络或切换本地模式</p></div>`;
+        return;
+    }
+    
+    // 特殊处理：收藏夹
+    if (currentCategory === 'favorites') {
+        renderFavorites(searchTerm);
         return;
     }
     
     if (currentCategory === 'all') {
         for (const [category, items] of Object.entries(resources)) {
-            const filtered = items.filter(item => 
-                item.name.toLowerCase().includes(searchTerm) ||
-                item.description.toLowerCase().includes(searchTerm)
-            );
-            if (filtered.length > 0) {
-                createCategorySection(category, filtered);
-            }
+            const filtered = items.filter(item => item.name.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm));
+            if (filtered.length > 0) createCategorySection(category, filtered);
         }
     } else {
         const items = resources[currentCategory] || [];
-        const filtered = items.filter(item => 
-            item.name.toLowerCase().includes(searchTerm) ||
-            item.description.toLowerCase().includes(searchTerm)
-        );
-        if (filtered.length > 0) {
-            createCategorySection(currentCategory, filtered);
-        }
+        const filtered = items.filter(item => item.name.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm));
+        if (filtered.length > 0) createCategorySection(currentCategory, filtered);
+    }
+}
+
+// 渲染收藏夹
+function renderFavorites(searchTerm) {
+    const favItems = [];
+    for (const items of Object.values(resources)) {
+        items.forEach(item => {
+            if (favorites.includes(item.name)) {
+                favItems.push({ ...item, originalCategory: items === resources.tool ? 'tool' : 'editor' }); // 粗略记录分类以便图标显示
+            }
+        });
+    }
+    
+    // 简单过滤
+    const filtered = favItems.filter(item => item.name.toLowerCase().includes(searchTerm));
+    
+    if (filtered.length === 0) {
+        contentArea.innerHTML = `<div class="empty-state"><i class="fas fa-heart" style="color:var(--text-secondary)"></i><h3>还没有收藏任何资源</h3><p>点击卡片右上角的爱心来添加收藏</p></div>`;
+    } else {
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.innerHTML = `<div class="category-header"><i class="fas fa-heart category-icon" style="color:var(--danger-color)"></i><h2 class="category-title">我的收藏</h2><span class="category-count">共 ${filtered.length} 个功能</span></div>`;
+        const grid = document.createElement('div');
+        grid.className = 'cards-grid';
+        filtered.forEach(item => {
+            grid.appendChild(createCard(item, item.originalCategory || 'tool', true));
+        });
+        section.appendChild(grid);
+        contentArea.appendChild(section);
     }
 }
 
@@ -333,9 +293,7 @@ function setActiveCategory(category) {
     currentCategory = category;
     document.querySelectorAll('.sidebar-item').forEach(item => {
         item.classList.remove('active');
-        if (item.dataset.category === category) {
-            item.classList.add('active');
-        }
+        if (item.dataset.category === category) item.classList.add('active');
     });
 }
 
@@ -343,152 +301,112 @@ function createCategorySection(category, items) {
     const section = document.createElement('div');
     section.className = 'category-section';
     
-    const names = {
-        'all': '全部功能', 'tool': '通用工具', 'api': 'API接口',
-        'component': '控件库', 'data': '数据', 'editor': '编辑器',
-        'kongjianshangcheng': '控件商城', 'tutorial': '教程手册',
-        'ui': 'UI资源', 'mengzhongshui': '梦众/名人堂',
-        'teshu': '特殊', 'maotool': '猫系工具'
-    };
+    const names = { 'all': '全部功能', 'tool': '通用工具', 'api': 'API接口', 'component': '控件库', 'data': '数据', 'editor': '编辑器', 'kongjianshangcheng': '控件商城', 'tutorial': '教程手册', 'ui': 'UI资源', 'mengzhongshui': '梦众/名人堂', 'teshu': '特殊', 'maotool': '猫系工具' };
+    const icons = { 'all': 'fa-home', 'tool': 'fa-toolbox', 'api': 'fa-plug', 'component': 'fa-puzzle-piece', 'data': 'fa-database', 'editor': 'fa-code', 'kongjianshangcheng': 'fa-store', 'tutorial': 'fa-book', 'ui': 'fa-palette', 'mengzhongshui': 'fa-star', 'teshu': 'fa-gem', 'maotool': 'fa-wrench' };
     
-    const icons = {
-        'all': 'fa-home', 'tool': 'fa-toolbox', 'api': 'fa-plug',
-        'component': 'fa-puzzle-piece', 'data': 'fa-database', 'editor': 'fa-code',
-        'kongjianshangcheng': 'fa-store', 'tutorial': 'fa-book',
-        'ui': 'fa-palette', 'mengzhongshui': 'fa-star',
-        'teshu': 'fa-gem', 'maotool': 'fa-wrench'
-    };
+    section.innerHTML = `<div class="category-header"><i class="fas ${icons[category] || 'fa-folder'} category-icon"></i><h2 class="category-title">${names[category] || category}</h2><span class="category-count">共 ${items.length} 个功能</span></div>`;
     
-    section.innerHTML = `
-        <div class="category-header">
-            <i class="fas ${icons[category] || 'fa-folder'} category-icon"></i>
-            <h2 class="category-title">${names[category] || category}</h2>
-            <span class="category-count">共 ${items.length} 个功能</span>
-        </div>
-        <div class="cards-grid"></div>
-    `;
-    
-    const grid = section.querySelector('.cards-grid');
-    items.forEach(item => {
-        grid.appendChild(createCard(item, category));
-    });
-    
+    const grid = document.createElement('div');
+    grid.className = 'cards-grid';
+    items.forEach(item => grid.appendChild(createCard(item, category, false)));
+    section.appendChild(grid);
     contentArea.appendChild(section);
 }
 
-function createCard(item, category) {
+function createCard(item, category, isFavOverride = false) {
     const card = document.createElement('div');
     card.className = 'card';
     
-    // 名人堂自定义头像
+    const isFav = isFavOverride || favorites.includes(item.name);
+    const heartIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
+    
     let avatarHtml = `<div class="card-icon">${getIconForCategory(category)}</div>`;
     if (category === 'mengzhongshui') {
         const customAvatar = getCustomAvatar(item.name);
-        if (customAvatar) {
-            avatarHtml = `<img src="${customAvatar}" alt="${item.name}" class="card-icon avatar" style="object-fit:cover">`;
-        }
+        if (customAvatar) avatarHtml = `<img src="${customAvatar}" alt="${item.name}" class="card-icon" style="object-fit:cover">`;
     }
     
     card.innerHTML = `
+        <div class="card-favorite ${isFav ? 'active' : ''}" onclick="event.stopPropagation()">
+            <i class="${heartIcon}"></i>
+        </div>
         <div class="card-header">
             ${avatarHtml}
             <div class="card-title">${escapeHtml(item.name)}</div>
         </div>
         <div class="card-desc">${escapeHtml(item.description)}</div>
-        <div class="card-link">
-            <i class="fas fa-external-link-alt"></i>
-            <span>${escapeHtml(item.link)}</span>
-        </div>
+        <div class="card-link"><i class="fas fa-external-link-alt"></i><span>${escapeHtml(item.link)}</span></div>
     `;
     
+    // 绑定卡片点击
     card.addEventListener('click', () => handleCardClick(item));
+    
+    // 绑定爱心点击
+    const favBtn = card.querySelector('.card-favorite');
+    favBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFavorite(item.name, favBtn, category);
+    });
+    
     return card;
 }
 
+// 收藏/取消收藏逻辑
+function toggleFavorite(name, btnElement, category) {
+    const index = favorites.indexOf(name);
+    const icon = btnElement.querySelector('i');
+    
+    if (index === -1) {
+        // 添加收藏
+        favorites.push(name);
+        btnElement.classList.add('active');
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+    } else {
+        // 取消收藏
+        favorites.splice(index, 1);
+        btnElement.classList.remove('active');
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+        
+        // 如果当前在收藏页，且取消收藏了，则重新渲染以移除卡片
+        if (currentCategory === 'favorites') {
+            renderContent();
+            return;
+        }
+    }
+    
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+}
+
 function getIconForCategory(category) {
-    const icons = {
-        'tool': '🔧', 'api': '🔌', 'component': '🧩',
-        'data': '💾', 'editor': '</>', 'kongjianshangcheng': '🛒',
-        'tutorial': '📖', 'ui': '🎨', 'mengzhongshui': '⭐',
-        'teshu': '💎', 'maotool': '🛠️'
-    };
+    const icons = { 'tool': '🔧', 'api': '🔌', 'component': '🧩', 'data': '💾', 'editor': '</>', 'kongjianshangcheng': '🛒', 'tutorial': '📖', 'ui': '🎨', 'mengzhongshui': '⭐', 'teshu': '💎', 'maotool': '🛠️' };
     return icons[category] || '📄';
 }
 
 function handleCardClick(item) {
     currentCardData = item;
     if (confirmJump) {
-        const titleEl = document.getElementById('confirmTitle');
-        const descEl = document.getElementById('confirmDesc');
-        const linkEl = document.getElementById('confirmLink');
-        
-        if (titleEl) titleEl.textContent = item.name;
-        if (descEl) descEl.textContent = item.description;
-        if (linkEl) {
-            linkEl.textContent = item.link;
-            linkEl.href = item.link;
-        }
-        if (confirmModal) confirmModal.classList.add('active');
+        document.getElementById('confirmTitle').textContent = item.name;
+        document.getElementById('confirmDesc').textContent = item.description;
+        document.getElementById('confirmLink').textContent = item.link;
+        document.getElementById('confirmLink').href = item.link;
+        confirmModal.classList.add('active');
     } else {
         window.open(item.link, '_blank');
     }
 }
 
-// ==================== 错误处理 ====================
-function showFatalError(message, error) {
-    if (contentArea) {
-        contentArea.innerHTML = `
-            <div class="error-state">
-                <i class="fas fa-skull-crossbones" style="font-size:48px;margin-bottom:20px;color:var(--danger-color)"></i>
-                <h3>${escapeHtml(message)}</h3>
-                <details style="margin-top:20px;text-align:left;max-width:600px;margin-left:auto;margin-right:auto">
-                    <summary style="cursor:pointer;color:var(--text-secondary)">查看错误详情</summary>
-                    <pre style="background:var(--bg-primary);padding:15px;border-radius:8px;margin-top:10px;overflow-x:auto;font-size:12px">${escapeHtml(error?.message || '未知错误')}</pre>
-                </details>
-                <button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;border:none;border-radius:8px;background:var(--primary-color);color:white;cursor:pointer">
-                    刷新重试
-                </button>
-            </div>
-        `;
-    }
-}
-
-function showDataError(error) {
-    const emptyState = document.querySelector('.empty-state');
-    if (emptyState) {
-        emptyState.innerHTML = `
-            <i class="fas fa-database" style="font-size:48px;margin-bottom:20px;color:var(--primary-color)"></i>
-            <h3>数据加载失败</h3>
-            <p>${escapeHtml(error?.message || '未知错误')}</p>
-            <div style="margin-top:20px">
-                <button onclick="switchToLocalMode()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--primary-color);color:white;cursor:pointer;margin:5px">
-                    切换到本地模式
-                </button>
-                <button onclick="location.reload()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--bg-primary);color:var(--text-primary);cursor:pointer;margin:5px;border:1px solid var(--border-color)">
-                    刷新重试
-                </button>
-            </div>
-        `;
-    }
-}
-
-window.switchToLocalMode = function() {
-    localStorage.setItem('loadMode', 'page');
-    location.reload();
-};
-
 // ==================== 工具函数 ====================
-function debounce(func, wait) {
-    let timeout;
-    return function(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-}
+function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
+function escapeHtml(text) { if (typeof text !== 'string') return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
-function escapeHtml(text) {
-    if (typeof text !== 'string') return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+function showFatalError(msg, err) {
+    if (contentArea) contentArea.innerHTML = `<div class="error-state"><i class="fas fa-skull-crossbones" style="color:var(--danger-color)"></i><h3>${msg}</h3><details><summary>错误详情</summary><pre>${escapeHtml(err?.message)}</pre></details><button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;border:none;border-radius:8px;background:var(--primary-color);color:white;cursor:pointer">刷新重试</button></div>`;
+}
+function showDataError(err) {
+    const empty = document.querySelector('.empty-state');
+    if (empty) {
+        empty.innerHTML = `<i class="fas fa-database" style="color:var(--primary-color)"></i><h3>数据加载失败</h3><p>${escapeHtml(err?.message)}</p><div style="margin-top:20px"><button onclick="localStorage.setItem('loadMode','page');location.reload()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--primary-color);color:white;cursor:pointer;margin:5px">切换到本地模式</button><button onclick="location.reload()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--bg-primary);color:var(--text-primary);cursor:pointer;margin:5px;border:1px solid var(--border-color)">刷新重试</button></div>`;
+    }
 }
