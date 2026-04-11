@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoCo 快捷导航</title>
-    <!-- ✅ 网站图标 -->
     <link rel="icon" href="https://static.codemao.cn/pickduck/rk_gX8cSlx.png?hash=FledMqVJIqXs3At0Xl317dAny1jZ" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
@@ -15,7 +14,6 @@
             <div class="sidebar-scroll">
                 <div class="sidebar-item" data-category="favorites" title="我的收藏"><i class="fas fa-heart"></i></div>
                 <div class="sidebar-item active" data-category="all" title="全部功能"><i class="fas fa-home"></i></div>
-                <!-- ✅ 已按指定顺序排列 -->
                 <div class="sidebar-item" data-category="editor" title="编辑器"><i class="fas fa-code"></i></div>
                 <div class="sidebar-item" data-category="component" title="控件库"><i class="fas fa-puzzle-piece"></i></div>
                 <div class="sidebar-item" data-category="kongjianshangcheng" title="控件商城"><i class="fas fa-store"></i></div>
@@ -93,9 +91,10 @@
         </div>
     </div>
 
-    <!-- 外部配置文件 -->
+    <!-- ✅ 外部配置文件（传统 script 标签，确保本地环境稳定加载） -->
     <script src="avatars.js"></script>
     <script src="announcements.js"></script>
+    <!-- ✅ 主脚本（module 类型，最后加载） -->
     <script src="script.js" type="module"></script>
 </body>
 </html>

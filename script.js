@@ -12,6 +12,23 @@ const CATEGORY_ORDER = [
     'tutorial', 'maotool', 'tool', 'data', 'mengzhongshui', 'teshu'
 ];
 
+// ✅ 分类图标映射（Font Awesome，用于卡片 + 标题）
+const CATEGORY_ICONS = {
+    'editor': 'fa-code',
+    'component': 'fa-puzzle-piece',
+    'kongjianshangcheng': 'fa-store',
+    'ui': 'fa-palette',
+    'api': 'fa-plug',
+    'tutorial': 'fa-book',
+    'maotool': 'fa-wrench',
+    'tool': 'fa-toolbox',
+    'data': 'fa-database',
+    'mengzhongshui': 'fa-star',
+    'teshu': 'fa-gem',
+    'favorites': 'fa-heart',
+    'all': 'fa-home'
+};
+
 // DOM 缓存
 let contentArea, searchInput, settingsBtns, settingsModal, confirmModal;
 let confirmToggle, saveSettingsBtn, logoUrlInput, loadModeRadios;
@@ -205,7 +222,6 @@ function renderContent() {
     }
     
     if (currentCategory === 'all') {
-        // ✅ 严格按 CATEGORY_ORDER 顺序渲染
         for (const category of CATEGORY_ORDER) {
             const items = resources[category];
             if (!items) continue;
@@ -234,11 +250,11 @@ function renderFavorites(searchTerm) {
     }
     const filtered = favItems.filter(item => item.name.toLowerCase().includes(searchTerm));
     if (filtered.length === 0) {
-        contentArea.innerHTML = `<div class="empty-state"><i class="fas fa-heart" style="color:var(--text-secondary)"></i><h3>还没有收藏任何资源</h3><p>点击卡片右上角的爱心来添加收藏</p></div>`;
+        contentArea.innerHTML = `<div class="empty-state"><i class="fas fa-heart"></i><h3>还没有收藏任何资源</h3><p>点击卡片右上角的爱心来添加收藏</p></div>`;
     } else {
         const section = document.createElement('div');
         section.className = 'category-section';
-        section.innerHTML = `<div class="category-header"><i class="fas fa-heart category-icon" style="color:var(--danger-color)"></i><h2 class="category-title">我的收藏</h2><span class="category-count">共 ${filtered.length} 个功能</span></div>`;
+        section.innerHTML = `<div class="category-header"><i class="fas fa-heart category-icon"></i><h2 class="category-title">我的收藏</h2><span class="category-count">共 ${filtered.length} 个功能</span></div>`;
         const grid = document.createElement('div');
         grid.className = 'cards-grid';
         filtered.forEach(item => {
@@ -263,18 +279,14 @@ function createCategorySection(category, items) {
     
     const names = {
         'editor': '编辑器', 'component': '控件库', 'kongjianshangcheng': '控件商城',
-        'ui': 'UI资源', 'api': 'API接口', 'tutorial': '教程手册',
+        'ui': 'UI 资源', 'api': 'API 接口', 'tutorial': '教程手册',
         'maotool': '猫系工具', 'tool': '通用工具', 'data': '数据',
         'mengzhongshui': '梦众/名人堂', 'teshu': '特殊'
     };
-    const icons = {
-        'editor': 'fa-code', 'component': 'fa-puzzle-piece', 'kongjianshangcheng': 'fa-store',
-        'ui': 'fa-palette', 'api': 'fa-plug', 'tutorial': 'fa-book',
-        'maotool': 'fa-wrench', 'tool': 'fa-toolbox', 'data': 'fa-database',
-        'mengzhongshui': 'fa-star', 'teshu': 'fa-gem'
-    };
     
-    section.innerHTML = `<div class="category-header"><i class="fas ${icons[category] || 'fa-folder'} category-icon"></i><h2 class="category-title">${names[category] || category}</h2><span class="category-count">共 ${items.length} 个功能</span></div>`;
+    const iconClass = CATEGORY_ICONS[category] || 'fa-folder';
+    
+    section.innerHTML = `<div class="category-header"><i class="fas ${iconClass} category-icon"></i><h2 class="category-title">${names[category] || category}</h2><span class="category-count">共 ${items.length} 个功能</span></div>`;
     
     const grid = document.createElement('div');
     grid.className = 'cards-grid';
@@ -283,18 +295,23 @@ function createCategorySection(category, items) {
     contentArea.appendChild(section);
 }
 
+// ✅ 关键修复：卡片图标使用与分类一致的 Font Awesome 图标
 function createCard(item, category, isFavOverride = false) {
     const card = document.createElement('div');
     card.className = 'card';
     const isFav = isFavOverride || favorites.includes(item.name);
     const heartIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
     
-    const customAvatars = window.customAvatars || {};
-    let avatarHtml = `<div class="card-icon">${getIconForCategory(category)}</div>`;
+    // ✅ 使用分类对应的 Font Awesome 图标
+    const iconClass = CATEGORY_ICONS[category] || 'fa-file';
+    let avatarHtml = `<div class="card-icon"><i class="fas ${iconClass}"></i></div>`;
+    
+    // 名人堂自定义头像（优先级最高）
     if (category === 'mengzhongshui') {
+        const customAvatars = window.customAvatars || {};
         const customAvatar = customAvatars[item.name];
         if (customAvatar) {
-            avatarHtml = `<img src="${customAvatar}" alt="${item.name}" class="card-icon" style="object-fit:cover">`;
+            avatarHtml = `<img src="${customAvatar}" alt="${item.name}" class="card-icon avatar" style="object-fit:cover">`;
         }
     }
     
@@ -341,16 +358,6 @@ function toggleFavorite(name, btnElement, category) {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
 }
 
-function getIconForCategory(category) {
-    const icons = {
-        'editor': '</>', 'component': '🧩', 'kongjianshangcheng': '🛒',
-        'ui': '🎨', 'api': '🔌', 'tutorial': '📖',
-        'maotool': '🛠️', 'tool': '🔧', 'data': '💾',
-        'mengzhongshui': '⭐', 'teshu': '💎'
-    };
-    return icons[category] || '📄';
-}
-
 function handleCardClick(item) {
     currentCardData = item;
     if (confirmJump) {
@@ -368,7 +375,10 @@ function handleCardClick(item) {
 function initAnnouncements() {
     const viewport = document.getElementById('annViewport');
     if (!viewport) return;
+    
+    // ✅ 安全读取外部公告文件（通过传统 script 标签已加载到 window）
     const list = window.announcements || [];
+    
     if (list.length === 0) {
         viewport.innerHTML = '<div class="ann-text" style="opacity:0.8">无内容</div>';
         return;
@@ -377,6 +387,7 @@ function initAnnouncements() {
         viewport.innerHTML = `<div class="ann-text">${escapeHtml(list[0])}</div>`;
         return;
     }
+    
     let currentIndex = 0;
     const createItem = (text, state) => {
         const el = document.createElement('div');
@@ -385,7 +396,9 @@ function initAnnouncements() {
         viewport.appendChild(el);
         return el;
     };
+    
     createItem(list[0], 'active');
+    
     setInterval(() => {
         currentIndex = (currentIndex + 1) % list.length;
         const currentEl = viewport.querySelector('.ann-item.active');
@@ -419,6 +432,6 @@ function escapeHtml(text) {
 function showDataError(err) {
     const empty = document.querySelector('.empty-state');
     if (empty) {
-        empty.innerHTML = `<i class="fas fa-database" style="color:var(--primary-color)"></i><h3>数据加载失败</h3><p>${escapeHtml(err?.message)}</p><div style="margin-top:20px"><button onclick="localStorage.setItem('loadMode','page');location.reload()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--primary-color);color:white;cursor:pointer;margin:5px">切换到本地模式</button><button onclick="location.reload()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--bg-primary);color:var(--text-primary);cursor:pointer;margin:5px;border:1px solid var(--border-color)">刷新重试</button></div>`;
+        empty.innerHTML = `<i class="fas fa-database"></i><h3>数据加载失败</h3><p>${escapeHtml(err?.message)}</p><div style="margin-top:20px"><button onclick="localStorage.setItem('loadMode','page');location.reload()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--primary-color);color:white;cursor:pointer;margin:5px">切换到本地模式</button><button onclick="location.reload()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--bg-primary);color:var(--text-primary);cursor:pointer;margin:5px;border:1px solid var(--border-color)">刷新重试</button></div>`;
     }
 }
