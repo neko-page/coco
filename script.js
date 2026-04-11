@@ -240,12 +240,10 @@ function renderContent() {
 
 function renderFavorites(searchTerm) {
     const favItems = [];
-    // 创建一个清洗过名称的集合，用于快速查找
     const cleanFavSet = new Set(favorites);
     
     for (const [cat, items] of Object.entries(resources)) {
         items.forEach(item => {
-            // 匹配清洗后的名称
             if (cleanFavSet.has(item.name.trim())) {
                 favItems.push({ ...item, originalCategory: cat });
             }
@@ -300,7 +298,6 @@ function createCard(item, category, isFavOverride = false) {
     const card = document.createElement('div');
     card.className = 'card';
     
-    // 判断是否已收藏（对比清洗后的名称）
     const cleanName = item.name.trim();
     const isFav = isFavOverride || favorites.includes(cleanName);
     
@@ -337,7 +334,7 @@ function createCard(item, category, isFavOverride = false) {
     return card;
 }
 
-// ✅ 修复收藏逻辑：强制使用清洗后的名称，防止空格导致无法删除
+// ✅ 核心修复：将 localStorage 保存逻辑提前，避免在收藏页删除时因提前 return 导致数据未持久化
 function toggleFavorite(name, btnElement, category) {
     const cleanName = name.trim();
     const index = favorites.indexOf(cleanName);
@@ -353,12 +350,15 @@ function toggleFavorite(name, btnElement, category) {
         btnElement.classList.remove('active');
         icon.classList.remove('fas');
         icon.classList.add('far');
-        if (currentCategory === 'favorites') {
-            renderContent();
-            return;
-        }
     }
+
+    // ✅ 统一保存数据，确保增删操作都能写入本地存储
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+
+    // 如果在收藏页，重新渲染以移除卡片
+    if (currentCategory === 'favorites') {
+        renderContent();
+    }
 }
 
 function handleCardClick(item) {
