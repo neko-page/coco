@@ -3,7 +3,7 @@
 // 开发者可在此文件中修改配置
 const customAvatars = {
     "垃圾桶": "https://q1.qlogo.cn/g?b=qq&nk=575244421&s=640",
-    "梦中水大嘿客": "https://static.codemao.cn/pickduck/HkM3AfCr11.jpg?hash=FIpf_3gPYeybDTRe5AD5zZDl5FmY",
+    "梦中水大嘿客": "https://static.codemao.cn/pickduck/HkM3AfCrll.jpg?hash=Flpf_3gPYeybDTRe5AD5zZDl5FmY",
     "风哲": "https://static.codemao.cn/pickduck/Hyw0KWRhlx.jpg?hash=FiUjyERA6aApTCDEb6TYzCvOL4wR",
     "小猫": "https://static.codemao.cn/pickduck/SJ3pQMXueg.jpg?hash=FoVrX6JKsBAGl1TFVemZ7IBujIAL"
 };
