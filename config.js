@@ -9,7 +9,7 @@ const customAvatars = {
 };
 
 // 默认 Logo URL
-const DEFAULT_LOGO_URL = "https://static.codemao.cn/pickduck/rk_gX8cS1x.png?hash=FledMqVJIqXs3At0Xl3I7dAnyIJZ";
+const DEFAULT_LOGO_URL = "https://static.codemao.cn/pickduck/rk_gX8cSlx.png?hash=FledMqVJIqXs3At0Xl317dAny1jZ"
 
 // ✅ 关键修复：挂载到 window 对象，确保 script.js 可以访问
 window.customAvatars = customAvatars;
