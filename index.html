@@ -3,39 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoCo 快捷导航</title>
+    <title>coco 快捷导航</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- 侧边栏 -->
         <aside class="sidebar">
             <div class="sidebar-scroll">
                 <div class="sidebar-item" data-category="favorites" title="我的收藏"><i class="fas fa-heart"></i></div>
                 <div class="sidebar-item active" data-category="all" title="全部功能"><i class="fas fa-home"></i></div>
-                <div class="sidebar-item" data-category="tool" title="通用工具"><i class="fas fa-toolbox"></i></div>
-                <div class="sidebar-item" data-category="api" title="API接口"><i class="fas fa-plug"></i></div>
-                <div class="sidebar-item" data-category="component" title="控件库"><i class="fas fa-puzzle-piece"></i></div>
-                <div class="sidebar-item" data-category="data" title="数据"><i class="fas fa-database"></i></div>
+                <!-- 已按指定顺序排列 -->
                 <div class="sidebar-item" data-category="editor" title="编辑器"><i class="fas fa-code"></i></div>
+                <div class="sidebar-item" data-category="component" title="控件库"><i class="fas fa-puzzle-piece"></i></div>
                 <div class="sidebar-item" data-category="kongjianshangcheng" title="控件商城"><i class="fas fa-store"></i></div>
-                <div class="sidebar-item" data-category="tutorial" title="教程手册"><i class="fas fa-book"></i></div>
                 <div class="sidebar-item" data-category="ui" title="UI资源"><i class="fas fa-palette"></i></div>
+                <div class="sidebar-item" data-category="api" title="API接口"><i class="fas fa-plug"></i></div>
+                <div class="sidebar-item" data-category="tutorial" title="教程手册"><i class="fas fa-book"></i></div>
+                <div class="sidebar-item" data-category="maotool" title="猫系工具"><i class="fas fa-wrench"></i></div>
+                <div class="sidebar-item" data-category="tool" title="通用工具"><i class="fas fa-toolbox"></i></div>
+                <div class="sidebar-item" data-category="data" title="数据"><i class="fas fa-database"></i></div>
                 <div class="sidebar-item" data-category="mengzhongshui" title="梦众/名人堂"><i class="fas fa-star"></i></div>
                 <div class="sidebar-item" data-category="teshu" title="特殊"><i class="fas fa-gem"></i></div>
-                <div class="sidebar-item" data-category="maotool" title="猫系工具"><i class="fas fa-wrench"></i></div>
             </div>
             <div class="sidebar-fixed">
                 <div class="sidebar-item settings-btn" title="设置"><i class="fas fa-cog"></i></div>
             </div>
         </aside>
 
-        <!-- 主内容区 -->
         <main class="main-content">
             <header class="header">
                 <div class="logo-section">
-                    <img src="https://static.codemao.cn/pickduck/rk_gX8cSlx.png?hash=FledMqVJIqXs3At0Xl317dAny1jZ" alt="Logo" class="logo" id="siteLogo">
+                    <img src="" alt="Logo" class="logo" id="siteLogo">
                     <span class="site-title">coco 快捷导航</span>
                 </div>
                 <div class="search-box">
@@ -47,13 +46,10 @@
                 </div>
             </header>
 
-            <!-- 公告栏 -->
             <div class="announcement-bar">
                 <span class="ann-label">📢 公告</span>
                 <span class="ann-divider"></span>
-                <div class="ann-viewport" id="annViewport">
-                    <!-- JS 动态渲染 -->
-                </div>
+                <div class="ann-viewport" id="annViewport"></div>
             </div>
 
             <div id="contentArea"></div>
@@ -63,21 +59,14 @@
     <!-- 设置弹窗 -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal">
-            <div class="modal-header">
-                <i class="fas fa-cog fa-2x"></i>
-                <h2 class="modal-title">设置</h2>
-            </div>
+            <div class="modal-header"><i class="fas fa-cog fa-2x"></i><h2 class="modal-title">设置</h2></div>
             <div class="setting-item">
-                <div class="setting-header">
-                    <div class="setting-label"><i class="fas fa-image"></i> <span>Logo URL</span></div>
-                </div>
+                <div class="setting-header"><div class="setting-label"><i class="fas fa-image"></i><span>Logo URL</span></div></div>
                 <div class="setting-desc">设置左上角显示的 Logo 图片地址（需以 https:// 开头）</div>
                 <div class="input-group"><input type="url" id="logoUrlInput" placeholder="https://..."></div>
             </div>
             <div class="setting-item">
-                <div class="setting-header">
-                    <div class="setting-label"><i class="fas fa-cloud-download-alt"></i> <span>数据加载方式</span></div>
-                </div>
+                <div class="setting-header"><div class="setting-label"><i class="fas fa-cloud-download-alt"></i><span>数据加载方式</span></div></div>
                 <div class="setting-desc">选择资源列表的加载来源</div>
                 <div class="radio-group">
                     <label class="radio-option"><input type="radio" name="loadMode" value="cdn" checked><span>CDN 模式</span></label>
@@ -85,15 +74,11 @@
                 </div>
             </div>
             <div class="setting-item">
-                <div class="setting-header">
-                    <div class="setting-label"><i class="fas fa-shield-alt"></i> <span>二次确认跳转</span></div>
-                    <div class="switch" id="confirmToggle"><div class="switch-handle"></div></div>
-                </div>
+                <div class="setting-header"><div class="setting-label"><i class="fas fa-shield-alt"></i><span>二次确认跳转</span></div>
+                <div class="switch" id="confirmToggle"><div class="switch-handle"></div></div></div>
                 <div class="setting-desc">点击卡片时弹出确认对话框，防止误触</div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" id="saveSettings">保存设置</button>
-            </div>
+            <div class="modal-footer"><button class="btn btn-primary" id="saveSettings">保存设置</button></div>
         </div>
     </div>
 
@@ -101,17 +86,14 @@
     <div class="modal-overlay" id="confirmModal">
         <div class="modal confirm-modal">
             <div class="confirm-header" id="confirmTitle">卡片名称</div>
-            <div class="confirm-body">
-                <p id="confirmDesc">卡片描述</p>
-                <a href="#" id="confirmLink" target="_blank" class="confirm-link">https://...</a>
-            </div>
-            <div class="confirm-footer">
-                <button class="btn" id="confirmCancel">取消</button>
-                <button class="btn btn-primary" id="confirmProceed">确定跳转</button>
-            </div>
+            <div class="confirm-body"><p id="confirmDesc">卡片描述</p><a href="#" id="confirmLink" target="_blank" class="confirm-link">https://...</a></div>
+            <div class="confirm-footer"><button class="btn" id="confirmCancel">取消</button><button class="btn btn-primary" id="confirmProceed">确定跳转</button></div>
         </div>
     </div>
 
+    <!-- 外部配置文件（使用传统 script 标签确保本地环境稳定加载） -->
+    <script src="avatars.js"></script>
+    <script src="announcements.js"></script>
     <script src="script.js" type="module"></script>
 </body>
 </html>
