@@ -6,7 +6,7 @@ let currentCardData = null;
 const FAVORITES_KEY = 'coco_nav_favorites';
 let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
 
-// ✅ 严格分类顺序
+// ✅ 严格分类顺序（与侧边栏一致）
 const CATEGORY_ORDER = [
     'editor', 'component', 'kongjianshangcheng', 'ui', 'api',
     'tutorial', 'maotool', 'tool', 'data', 'mengzhongshui', 'teshu'
@@ -70,7 +70,6 @@ async function loadFromCDN() {
 }
 
 async function loadFromLocal() {
-    // 本地开发需使用 Live Server，直接双击打开可能受 CORS 限制
     const localUrl = 'https://neko-page.github.io/src/coco/main/resources.js';
     try {
         const module = await import(localUrl);
@@ -129,7 +128,6 @@ function saveSettings() {
         }
     }
     if (settingsModal) settingsModal.classList.remove('active');
-    // ✅ 关键修复：保存设置后立即刷新界面
     renderContent();
 }
 
@@ -291,7 +289,6 @@ function createCard(item, category, isFavOverride = false) {
     const isFav = isFavOverride || favorites.includes(item.name);
     const heartIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
     
-    // ✅ 从外部文件读取头像配置
     const customAvatars = window.customAvatars || {};
     let avatarHtml = `<div class="card-icon">${getIconForCategory(category)}</div>`;
     if (category === 'mengzhongshui') {
@@ -371,10 +368,7 @@ function handleCardClick(item) {
 function initAnnouncements() {
     const viewport = document.getElementById('annViewport');
     if (!viewport) return;
-    
-    // ✅ 安全读取外部公告文件
     const list = window.announcements || [];
-    
     if (list.length === 0) {
         viewport.innerHTML = '<div class="ann-text" style="opacity:0.8">无内容</div>';
         return;
@@ -383,7 +377,6 @@ function initAnnouncements() {
         viewport.innerHTML = `<div class="ann-text">${escapeHtml(list[0])}</div>`;
         return;
     }
-    
     let currentIndex = 0;
     const createItem = (text, state) => {
         const el = document.createElement('div');
@@ -392,9 +385,7 @@ function initAnnouncements() {
         viewport.appendChild(el);
         return el;
     };
-    
     createItem(list[0], 'active');
-    
     setInterval(() => {
         currentIndex = (currentIndex + 1) % list.length;
         const currentEl = viewport.querySelector('.ann-item.active');
