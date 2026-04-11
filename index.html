@@ -11,22 +11,24 @@
     <div class="container">
         <!-- 侧边栏 -->
         <aside class="sidebar">
-            <!-- 新增收藏入口 -->
-            <div class="sidebar-item" data-category="favorites" title="我的收藏"><i class="fas fa-heart"></i></div>
-            <div class="sidebar-item active" data-category="all" title="全部功能"><i class="fas fa-home"></i></div>
-            
-            <div class="sidebar-item" data-category="tool" title="通用工具"><i class="fas fa-toolbox"></i></div>
-            <div class="sidebar-item" data-category="api" title="API接口"><i class="fas fa-plug"></i></div>
-            <div class="sidebar-item" data-category="component" title="控件库"><i class="fas fa-puzzle-piece"></i></div>
-            <div class="sidebar-item" data-category="data" title="数据"><i class="fas fa-database"></i></div>
-            <div class="sidebar-item" data-category="editor" title="编辑器"><i class="fas fa-code"></i></div>
-            <div class="sidebar-item" data-category="kongjianshangcheng" title="控件商城"><i class="fas fa-store"></i></div>
-            <div class="sidebar-item" data-category="tutorial" title="教程手册"><i class="fas fa-book"></i></div>
-            <div class="sidebar-item" data-category="ui" title="UI资源"><i class="fas fa-palette"></i></div>
-            <div class="sidebar-item" data-category="mengzhongshui" title="梦众/名人堂"><i class="fas fa-star"></i></div>
-            <div class="sidebar-item" data-category="teshu" title="特殊"><i class="fas fa-gem"></i></div>
-            <div class="sidebar-item" data-category="maotool" title="猫系工具"><i class="fas fa-wrench"></i></div>
-            <div class="sidebar-item settings-btn" title="设置"><i class="fas fa-cog"></i></div>
+            <div class="sidebar-scroll">
+                <div class="sidebar-item" data-category="favorites" title="我的收藏"><i class="fas fa-heart"></i></div>
+                <div class="sidebar-item active" data-category="all" title="全部功能"><i class="fas fa-home"></i></div>
+                <div class="sidebar-item" data-category="tool" title="通用工具"><i class="fas fa-toolbox"></i></div>
+                <div class="sidebar-item" data-category="api" title="API接口"><i class="fas fa-plug"></i></div>
+                <div class="sidebar-item" data-category="component" title="控件库"><i class="fas fa-puzzle-piece"></i></div>
+                <div class="sidebar-item" data-category="data" title="数据"><i class="fas fa-database"></i></div>
+                <div class="sidebar-item" data-category="editor" title="编辑器"><i class="fas fa-code"></i></div>
+                <div class="sidebar-item" data-category="kongjianshangcheng" title="控件商城"><i class="fas fa-store"></i></div>
+                <div class="sidebar-item" data-category="tutorial" title="教程手册"><i class="fas fa-book"></i></div>
+                <div class="sidebar-item" data-category="ui" title="UI资源"><i class="fas fa-palette"></i></div>
+                <div class="sidebar-item" data-category="mengzhongshui" title="梦众/名人堂"><i class="fas fa-star"></i></div>
+                <div class="sidebar-item" data-category="teshu" title="特殊"><i class="fas fa-gem"></i></div>
+                <div class="sidebar-item" data-category="maotool" title="猫系工具"><i class="fas fa-wrench"></i></div>
+            </div>
+            <div class="sidebar-fixed">
+                <div class="sidebar-item settings-btn" title="设置"><i class="fas fa-cog"></i></div>
+            </div>
         </aside>
 
         <!-- 主内容区 -->
@@ -45,9 +47,16 @@
                 </div>
             </header>
 
-            <div id="contentArea">
-                <!-- 动态生成 -->
+            <!-- 公告栏 -->
+            <div class="announcement-bar">
+                <span class="ann-label">📢 公告</span>
+                <span class="ann-divider"></span>
+                <div class="ann-viewport" id="annViewport">
+                    <!-- JS 动态渲染 -->
+                </div>
             </div>
+
+            <div id="contentArea"></div>
         </main>
     </div>
 
@@ -58,17 +67,13 @@
                 <i class="fas fa-cog fa-2x"></i>
                 <h2 class="modal-title">设置</h2>
             </div>
-            
             <div class="setting-item">
                 <div class="setting-header">
                     <div class="setting-label"><i class="fas fa-image"></i> <span>Logo URL</span></div>
                 </div>
                 <div class="setting-desc">设置左上角显示的 Logo 图片地址（需以 https:// 开头）</div>
-                <div class="input-group">
-                    <input type="url" id="logoUrlInput" placeholder="https://...">
-                </div>
+                <div class="input-group"><input type="url" id="logoUrlInput" placeholder="https://..."></div>
             </div>
-
             <div class="setting-item">
                 <div class="setting-header">
                     <div class="setting-label"><i class="fas fa-cloud-download-alt"></i> <span>数据加载方式</span></div>
@@ -79,7 +84,6 @@
                     <label class="radio-option"><input type="radio" name="loadMode" value="page"><span>本地模式</span></label>
                 </div>
             </div>
-
             <div class="setting-item">
                 <div class="setting-header">
                     <div class="setting-label"><i class="fas fa-shield-alt"></i> <span>二次确认跳转</span></div>
@@ -87,7 +91,6 @@
                 </div>
                 <div class="setting-desc">点击卡片时弹出确认对话框，防止误触</div>
             </div>
-
             <div class="modal-footer">
                 <button class="btn btn-primary" id="saveSettings">保存设置</button>
             </div>
