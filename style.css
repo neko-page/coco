@@ -242,3 +242,17 @@ body {
     .search-box { width: 100%; max-width: none; }
     .cards-grid { grid-template-columns: 1fr; }
 }
+
+/* 移除移动端点击高亮色与聚焦默认轮廓 */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+*:focus {
+    outline: none;
+}
+
+/* 针对可交互元素强化兼容 */
+.card, .card-link, a, button, .icon-btn, .sidebar-item, .btn {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
