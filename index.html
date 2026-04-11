@@ -56,14 +56,16 @@
         </main>
     </div>
 
-    <!-- 设置弹窗 -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal">
             <div class="modal-header"><i class="fas fa-cog fa-2x"></i><h2 class="modal-title">设置</h2></div>
             <div class="setting-item">
                 <div class="setting-header"><div class="setting-label"><i class="fas fa-image"></i><span>Logo URL</span></div></div>
                 <div class="setting-desc">设置左上角显示的 Logo 图片地址（需以 https:// 开头）</div>
-                <div class="input-group"><input type="url" id="logoUrlInput" placeholder="https://..."></div>
+                <div class="input-group logo-input-group">
+                    <input type="url" id="logoUrlInput" placeholder="https://...">
+                    <button id="resetLogoBtn" class="btn-reset" title="重置为默认 Logo">重置</button>
+                </div>
             </div>
             <div class="setting-item">
                 <div class="setting-header"><div class="setting-label"><i class="fas fa-cloud-download-alt"></i><span>数据加载方式</span></div></div>
@@ -82,7 +84,6 @@
         </div>
     </div>
 
-    <!-- 二次确认弹窗 -->
     <div class="modal-overlay" id="confirmModal">
         <div class="modal confirm-modal">
             <div class="confirm-header" id="confirmTitle">卡片名称</div>
@@ -91,7 +92,6 @@
         </div>
     </div>
 
-    <!-- 外部配置引用 -->
     <script src="config.js"></script>
     <script src="announcements.js"></script>
     <script src="script.js" type="module"></script>
