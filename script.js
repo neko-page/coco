@@ -1,3 +1,4 @@
+// ==================== 全局状态 ====================
 let resources = {};
 let currentCategory = 'all';
 let confirmJump = false;
@@ -5,11 +6,13 @@ let currentCardData = null;
 const FAVORITES_KEY = 'coco_nav_favorites';
 let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]').map(n => n.trim());
 
+// ✅ 严格分类顺序（与侧边栏一致）
 const CATEGORY_ORDER = [
     'editor', 'component', 'kongjianshangcheng', 'ui', 'api',
     'tutorial', 'maotool', 'tool', 'data', 'mengzhongshui', 'teshu'
 ];
 
+// ✅ 分类图标映射
 const CATEGORY_ICONS = {
     'editor': 'fa-code', 'component': 'fa-puzzle-piece', 'kongjianshangcheng': 'fa-store',
     'ui': 'fa-palette', 'api': 'fa-plug', 'tutorial': 'fa-book',
@@ -17,10 +20,12 @@ const CATEGORY_ICONS = {
     'mengzhongshui': 'fa-star', 'teshu': 'fa-gem', 'favorites': 'fa-heart', 'all': 'fa-home'
 };
 
+// DOM 缓存
 let contentArea, searchInput, settingsBtns, settingsModal, confirmModal;
 let confirmToggle, saveSettingsBtn, logoUrlInput, loadModeRadios;
 let siteLogo, themeToggle;
 
+// ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded', async () => {
     cacheDOMElements();
     loadSettings();
@@ -45,6 +50,7 @@ function cacheDOMElements() {
     themeToggle = document.querySelector('.theme-toggle');
 }
 
+// ==================== 数据加载 ====================
 async function loadData() {
     const loadMode = localStorage.getItem('loadMode') || 'cdn';
     try {
@@ -77,12 +83,20 @@ async function loadFromLocal() {
     }
 }
 
+// ==================== 设置管理 ====================
 function loadSettings() {
     const savedLogo = localStorage.getItem('siteLogo');
+    // ✅ 修复首次启动 Logo 为空：优先使用 config.js 中的默认值
+    const defaultLogo = window.DEFAULT_LOGO_URL || 'https://static.codemao.cn/pickduck/rk_gX8cSlx.png?hash=FledMqVJIqXs3At0Xl317dAny1jZ';
+    
     if (savedLogo && siteLogo) {
         siteLogo.src = savedLogo;
         if (logoUrlInput) logoUrlInput.value = savedLogo;
+    } else if (siteLogo) {
+        siteLogo.src = defaultLogo;
+        if (logoUrlInput) logoUrlInput.value = defaultLogo;
     }
+    
     const savedConfirm = localStorage.getItem('confirmJump');
     if (savedConfirm === 'true' && confirmToggle) {
         confirmJump = true;
@@ -112,11 +126,13 @@ function saveSettings() {
         }
     }
     if (settingsModal) settingsModal.classList.remove('active');
-    location.reload();
+    location.reload(); // 保存后自动刷新
 }
 
+// ==================== 事件绑定 ====================
 function setupEventListeners() {
     if (!contentArea) return;
+    
     document.querySelectorAll('.sidebar-item[data-category]').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -124,13 +140,19 @@ function setupEventListeners() {
             if (category) { setActiveCategory(category); renderContent(); }
         });
     });
+    
     if (settingsBtns) {
         settingsBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => { e.stopPropagation(); if (settingsModal) settingsModal.classList.add('active'); });
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (settingsModal) settingsModal.classList.add('active');
+            });
         });
     }
+    
     if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
     
+    // ✅ Logo 重置按钮逻辑
     const resetLogoBtn = document.getElementById('resetLogoBtn');
     if (resetLogoBtn && logoUrlInput && siteLogo) {
         resetLogoBtn.addEventListener('click', () => {
@@ -144,14 +166,18 @@ function setupEventListeners() {
     [settingsModal, confirmModal].forEach(modal => {
         if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
     });
+    
     if (confirmToggle) {
         confirmToggle.addEventListener('click', () => { confirmJump = !confirmJump; confirmToggle.classList.toggle('active'); });
     }
+    
     document.getElementById('confirmCancel')?.addEventListener('click', () => confirmModal?.classList.remove('active'));
     document.getElementById('confirmProceed')?.addEventListener('click', () => {
         if (currentCardData) { window.open(currentCardData.link, '_blank'); confirmModal?.classList.remove('active'); }
     });
+    
     if (searchInput) searchInput.addEventListener('input', debounce(() => renderContent(), 300));
+    
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -168,25 +194,35 @@ function setupEventListeners() {
     }
 }
 
+// ==================== 内容渲染 ====================
 function renderContent() {
     if (!contentArea) return;
     contentArea.innerHTML = '';
     const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
     if (!resources || Object.keys(resources).length === 0) {
         contentArea.innerHTML = `<div class="empty-state"><i class="fas fa-database"></i><h3>无法加载资源列表</h3><p>请检查网络或切换本地模式</p></div>`;
         return;
     }
+    
     if (currentCategory === 'favorites') { renderFavorites(searchTerm); return; }
+    
     if (currentCategory === 'all') {
         for (const category of CATEGORY_ORDER) {
             const items = resources[category];
             if (!items) continue;
-            const filtered = items.filter(item => item.name.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm));
+            const filtered = items.filter(item => 
+                item.name.toLowerCase().includes(searchTerm) || 
+                item.description.toLowerCase().includes(searchTerm)
+            );
             if (filtered.length > 0) createCategorySection(category, filtered);
         }
     } else {
         const items = resources[currentCategory] || [];
-        const filtered = items.filter(item => item.name.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm));
+        const filtered = items.filter(item => 
+            item.name.toLowerCase().includes(searchTerm) || 
+            item.description.toLowerCase().includes(searchTerm)
+        );
         if (filtered.length > 0) createCategorySection(currentCategory, filtered);
     }
 }
@@ -195,7 +231,9 @@ function renderFavorites(searchTerm) {
     const favItems = [];
     const cleanFavSet = new Set(favorites);
     for (const [cat, items] of Object.entries(resources)) {
-        items.forEach(item => { if (cleanFavSet.has(item.name.trim())) favItems.push({ ...item, originalCategory: cat }); });
+        items.forEach(item => {
+            if (cleanFavSet.has(item.name.trim())) favItems.push({ ...item, originalCategory: cat });
+        });
     }
     const filtered = favItems.filter(item => item.name.toLowerCase().includes(searchTerm));
     if (filtered.length === 0) {
@@ -223,7 +261,12 @@ function setActiveCategory(category) {
 function createCategorySection(category, items) {
     const section = document.createElement('div');
     section.className = 'category-section';
-    const names = { 'editor': '编辑器', 'component': '控件库', 'kongjianshangcheng': '控件商城', 'ui': 'UI 资源', 'api': 'API 接口', 'tutorial': '教程手册', 'maotool': '猫系工具', 'tool': '通用工具', 'data': '数据', 'mengzhongshui': '梦众/名人堂', 'teshu': '特殊' };
+    const names = { 
+        'editor': '编辑器', 'component': '控件库', 'kongjianshangcheng': '控件商城', 
+        'ui': 'UI 资源', 'api': 'API 接口', 'tutorial': '教程手册', 
+        'maotool': '猫系工具', 'tool': '通用工具', 'data': '数据', 
+        'mengzhongshui': '梦众/名人堂', 'teshu': '特殊' 
+    };
     const iconClass = CATEGORY_ICONS[category] || 'fa-folder';
     section.innerHTML = `<div class="category-header"><i class="fas ${iconClass} category-icon"></i><h2 class="category-title">${names[category] || category}</h2><span class="category-count">共 ${items.length} 个功能</span></div>`;
     const grid = document.createElement('div');
@@ -236,31 +279,42 @@ function createCategorySection(category, items) {
 function createCard(item, category, isFavOverride = false) {
     const card = document.createElement('div');
     card.className = 'card';
+    
     const cleanName = item.name.trim();
     const isFav = isFavOverride || favorites.includes(cleanName);
     const heartIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
     const iconClass = CATEGORY_ICONS[category] || 'fa-file';
+    
     let avatarHtml = `<div class="card-icon"><i class="fas ${iconClass}"></i></div>`;
+    
+    // ✅ 修复名人堂头像不加载：安全读取 window.customAvatars
     if (category === 'mengzhongshui') {
-        const customAvatar = window.customAvatars?.[item.name] || window.customAvatars?.[cleanName];
-        if (customAvatar) avatarHtml = `<img src="${customAvatar}" alt="${item.name}" class="card-icon avatar" style="object-fit:cover">`;
+        const customAvatars = window.customAvatars || {};
+        const customAvatar = customAvatars[item.name] || customAvatars[cleanName];
+        if (customAvatar) {
+            avatarHtml = `<img src="${customAvatar}" alt="${cleanName}" class="card-icon avatar" style="object-fit:cover">`;
+        }
     }
+    
     card.innerHTML = `
         <div class="card-favorite ${isFav ? 'active' : ''}" onclick="event.stopPropagation()"><i class="${heartIcon}"></i></div>
         <div class="card-header">${avatarHtml}<div class="card-title">${escapeHtml(item.name)}</div></div>
         <div class="card-desc">${escapeHtml(item.description)}</div>
         <div class="card-link"><i class="fas fa-external-link-alt"></i><span>${escapeHtml(item.link)}</span></div>
     `;
+    
     card.addEventListener('click', () => handleCardClick(item));
     const favBtn = card.querySelector('.card-favorite');
     favBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFavorite(cleanName, favBtn, category); });
     return card;
 }
 
+// ✅ 修复收藏删除不保存：将 localStorage 写入提前
 function toggleFavorite(name, btnElement, category) {
     const cleanName = name.trim();
     const index = favorites.indexOf(cleanName);
     const icon = btnElement.querySelector('i');
+    
     if (index === -1) {
         favorites.push(cleanName);
         btnElement.classList.add('active');
@@ -272,7 +326,10 @@ function toggleFavorite(name, btnElement, category) {
         icon.classList.remove('fas');
         icon.classList.add('far');
     }
+    
+    // 统一持久化，避免提前 return 跳过保存
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    
     if (currentCategory === 'favorites') renderContent();
 }
 
@@ -289,26 +346,57 @@ function handleCardClick(item) {
     }
 }
 
+// ==================== 公告栏 ====================
 function initAnnouncements() {
     const viewport = document.getElementById('annViewport');
     if (!viewport) return;
+    
+    // 安全读取外部公告文件
     const list = window.announcements || [];
+    
     if (list.length === 0) { viewport.innerHTML = '<div class="ann-text" style="opacity:0.8">无内容</div>'; return; }
     if (list.length === 1) { viewport.innerHTML = `<div class="ann-text">${escapeHtml(list[0])}</div>`; return; }
+    
     let currentIndex = 0;
-    const createItem = (text, state) => { const el = document.createElement('div'); el.className = `ann-item ${state}`; el.textContent = text; viewport.appendChild(el); return el; };
+    const createItem = (text, state) => {
+        const el = document.createElement('div');
+        el.className = `ann-item ${state}`;
+        el.textContent = text;
+        viewport.appendChild(el);
+        return el;
+    };
+    
     createItem(list[0], 'active');
     setInterval(() => {
         currentIndex = (currentIndex + 1) % list.length;
         const currentEl = viewport.querySelector('.ann-item.active');
         const nextEl = createItem(list[currentIndex], 'enter');
-        requestAnimationFrame(() => { currentEl.classList.remove('active'); currentEl.classList.add('exit'); nextEl.classList.remove('enter'); nextEl.classList.add('active'); });
+        requestAnimationFrame(() => {
+            currentEl.classList.remove('active');
+            currentEl.classList.add('exit');
+            nextEl.classList.remove('enter');
+            nextEl.classList.add('active');
+        });
         setTimeout(() => currentEl.remove(), 600);
     }, 10000);
 }
 
-function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
-function escapeHtml(text) { if (typeof text !== 'string') return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+// ==================== 工具函数 ====================
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+function escapeHtml(text) {
+    if (typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function showDataError(err) {
     const empty = document.querySelector('.empty-state');
     if (empty) {
