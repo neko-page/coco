@@ -4,7 +4,8 @@ let currentCategory = 'all';
 let confirmJump = false;
 let currentCardData = null;
 const FAVORITES_KEY = 'coco_nav_favorites';
-let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+// 加载时清洗数据，去除可能的首尾空格
+let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]').map(n => n.trim());
 
 // ✅ 严格分类顺序（与侧边栏一致）
 const CATEGORY_ORDER = [
@@ -12,7 +13,7 @@ const CATEGORY_ORDER = [
     'tutorial', 'maotool', 'tool', 'data', 'mengzhongshui', 'teshu'
 ];
 
-// ✅ 分类图标映射（Font Awesome，用于卡片 + 标题）
+// ✅ 分类图标映射
 const CATEGORY_ICONS = {
     'editor': 'fa-code',
     'component': 'fa-puzzle-piece',
@@ -68,9 +69,7 @@ async function loadData() {
         } else {
             await loadFromLocal();
         }
-        console.log(`✅ 数据加载成功（${loadMode} 模式）`);
     } catch (error) {
-        console.error('❌ 数据加载失败:', error);
         showDataError(error);
         resources = {};
     }
@@ -125,6 +124,7 @@ function loadSettings() {
     }
 }
 
+// ✅ 保存设置后自动刷新
 function saveSettings() {
     let logoUrl = logoUrlInput ? logoUrlInput.value.trim() : '';
     if (logoUrl) {
@@ -133,7 +133,6 @@ function saveSettings() {
             return;
         }
         localStorage.setItem('siteLogo', logoUrl);
-        if (siteLogo) siteLogo.src = logoUrl;
     }
     localStorage.setItem('confirmJump', confirmJump);
     if (loadModeRadios) {
@@ -145,7 +144,7 @@ function saveSettings() {
         }
     }
     if (settingsModal) settingsModal.classList.remove('active');
-    renderContent();
+    location.reload(); // 自动刷新
 }
 
 // ==================== 事件绑定 ====================
@@ -171,9 +170,7 @@ function setupEventListeners() {
     }
     if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
     [settingsModal, confirmModal].forEach(modal => {
-        if (modal) modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.remove('active');
-        });
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
     });
     if (confirmToggle) {
         confirmToggle.addEventListener('click', () => {
@@ -243,11 +240,18 @@ function renderContent() {
 
 function renderFavorites(searchTerm) {
     const favItems = [];
+    // 创建一个清洗过名称的集合，用于快速查找
+    const cleanFavSet = new Set(favorites);
+    
     for (const [cat, items] of Object.entries(resources)) {
         items.forEach(item => {
-            if (favorites.includes(item.name)) favItems.push({ ...item, originalCategory: cat });
+            // 匹配清洗后的名称
+            if (cleanFavSet.has(item.name.trim())) {
+                favItems.push({ ...item, originalCategory: cat });
+            }
         });
     }
+    
     const filtered = favItems.filter(item => item.name.toLowerCase().includes(searchTerm));
     if (filtered.length === 0) {
         contentArea.innerHTML = `<div class="empty-state"><i class="fas fa-heart"></i><h3>还没有收藏任何资源</h3><p>点击卡片右上角的爱心来添加收藏</p></div>`;
@@ -257,9 +261,7 @@ function renderFavorites(searchTerm) {
         section.innerHTML = `<div class="category-header"><i class="fas fa-heart category-icon"></i><h2 class="category-title">我的收藏</h2><span class="category-count">共 ${filtered.length} 个功能</span></div>`;
         const grid = document.createElement('div');
         grid.className = 'cards-grid';
-        filtered.forEach(item => {
-            grid.appendChild(createCard(item, item.originalCategory || 'tool', true));
-        });
+        filtered.forEach(item => grid.appendChild(createCard(item, item.originalCategory || 'tool', true)));
         section.appendChild(grid);
         contentArea.appendChild(section);
     }
@@ -285,7 +287,6 @@ function createCategorySection(category, items) {
     };
     
     const iconClass = CATEGORY_ICONS[category] || 'fa-folder';
-    
     section.innerHTML = `<div class="category-header"><i class="fas ${iconClass} category-icon"></i><h2 class="category-title">${names[category] || category}</h2><span class="category-count">共 ${items.length} 个功能</span></div>`;
     
     const grid = document.createElement('div');
@@ -295,21 +296,20 @@ function createCategorySection(category, items) {
     contentArea.appendChild(section);
 }
 
-// ✅ 关键修复：卡片图标使用与分类一致的 Font Awesome 图标
 function createCard(item, category, isFavOverride = false) {
     const card = document.createElement('div');
     card.className = 'card';
-    const isFav = isFavOverride || favorites.includes(item.name);
-    const heartIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
     
-    // ✅ 使用分类对应的 Font Awesome 图标
+    // 判断是否已收藏（对比清洗后的名称）
+    const cleanName = item.name.trim();
+    const isFav = isFavOverride || favorites.includes(cleanName);
+    
+    const heartIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
     const iconClass = CATEGORY_ICONS[category] || 'fa-file';
     let avatarHtml = `<div class="card-icon"><i class="fas ${iconClass}"></i></div>`;
     
-    // 名人堂自定义头像（优先级最高）
     if (category === 'mengzhongshui') {
-        const customAvatars = window.customAvatars || {};
-        const customAvatar = customAvatars[item.name];
+        const customAvatar = window.customAvatars?.[item.name] || window.customAvatars?.[cleanName];
         if (customAvatar) {
             avatarHtml = `<img src="${customAvatar}" alt="${item.name}" class="card-icon avatar" style="object-fit:cover">`;
         }
@@ -331,17 +331,20 @@ function createCard(item, category, isFavOverride = false) {
     const favBtn = card.querySelector('.card-favorite');
     favBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        toggleFavorite(item.name, favBtn, category);
+        toggleFavorite(cleanName, favBtn, category);
     });
     
     return card;
 }
 
+// ✅ 修复收藏逻辑：强制使用清洗后的名称，防止空格导致无法删除
 function toggleFavorite(name, btnElement, category) {
-    const index = favorites.indexOf(name);
+    const cleanName = name.trim();
+    const index = favorites.indexOf(cleanName);
     const icon = btnElement.querySelector('i');
+    
     if (index === -1) {
-        favorites.push(name);
+        favorites.push(cleanName);
         btnElement.classList.add('active');
         icon.classList.remove('far');
         icon.classList.add('fas');
@@ -375,10 +378,7 @@ function handleCardClick(item) {
 function initAnnouncements() {
     const viewport = document.getElementById('annViewport');
     if (!viewport) return;
-    
-    // ✅ 安全读取外部公告文件（通过传统 script 标签已加载到 window）
     const list = window.announcements || [];
-    
     if (list.length === 0) {
         viewport.innerHTML = '<div class="ann-text" style="opacity:0.8">无内容</div>';
         return;
@@ -387,7 +387,6 @@ function initAnnouncements() {
         viewport.innerHTML = `<div class="ann-text">${escapeHtml(list[0])}</div>`;
         return;
     }
-    
     let currentIndex = 0;
     const createItem = (text, state) => {
         const el = document.createElement('div');
@@ -396,9 +395,7 @@ function initAnnouncements() {
         viewport.appendChild(el);
         return el;
     };
-    
     createItem(list[0], 'active');
-    
     setInterval(() => {
         currentIndex = (currentIndex + 1) % list.length;
         const currentEl = viewport.querySelector('.ann-item.active');
